@@ -17,16 +17,19 @@
   in {
     overlays.default = import ./nix/overlays.nix self;
 
+    checks = forAllSystems (pkgs: pkgs.python3Packages.qtile.passthru.tests);
+
     packages = forAllSystems (pkgs: let
       pypkgs = pkgs.python3Packages;
-      nixpkgs-qtile = pypkgs.qtile;
+
+      override-qtile = nixpkgs-qtile:
+        nixpkgs-qtile.overrideAttrs (prev: {
+          name = "${nixpkgs-qtile.pname}-${nixpkgs-qtile.version}";
+          passthru.unwrapped = nixpkgs-qtile;
+        });
     in {
       default = self.packages.${pkgs.system}.qtile;
-
-      qtile = nixpkgs-qtile.overrideAttrs (prev: {
-        name = "${nixpkgs-qtile.pname}-${nixpkgs-qtile.version}";
-        passthru.unwrapped = nixpkgs-qtile;
-      });
+      qtile = (override-qtile pypkgs.qtile);
     });
 
     devShells = forAllSystems (pkgs: let
@@ -35,9 +38,9 @@
           QTILE_DLOPEN_LIBGOBJECT = "${pkgs.glib}/lib/libgobject-2.0.so.0";
           QTILE_DLOPEN_LIBPANGOCAIRO = "${pkgs.pango}/lib/libpangocairo-1.0.so.0";
           QTILE_DLOPEN_LIBPANGO = "${pkgs.pango}/lib/libpango-1.0.so.0";
-          QTILE_DLOPEN_LIBXCBUTILCURSORS = "${pkgs.xcb-util-cursor.out}/lib/libxcb-cursor.so.0";
-          QTILE_INCLUDE_LIBPIXMAN = "${pkgs.pixman.outPath}/include";
-          QTILE_INCLUDE_LIBDRM = "${pkgs.libdrm.dev.outPath}/include/libdrm";
+          QTILE_DLOPEN_LIBXCBUTILCURSORS = "${pkgs.xcb-util-cursor}/lib/libxcb-cursor.so.0";
+          QTILE_INCLUDE_LIBPIXMAN = "${pkgs.pixman}/include";
+          QTILE_INCLUDE_LIBDRM = "${pkgs.libdrm.dev}/include/libdrm";
         };
 
         shellHook = ''
@@ -82,6 +85,7 @@
       default = pkgs.mkShell {
         inherit (common-shell) env shellHook;
 
+        inputsFrom = [ self.packages.${pkgs.system}.qtile ];
         packages = with pkgs; [
           (python3.withPackages common-python-deps)
           pre-commit
