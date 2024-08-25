@@ -14,7 +14,7 @@
         overlays = [(import ./nix/overlays.nix self)];
       });
   in {
-    overlays = import ./nix/overlays.nix self;
+    overlays.default = import ./nix/overlays.nix self;
     packages = forAllSystems (system: let
       pkgs = nixpkgsFor.${system};
     in {
