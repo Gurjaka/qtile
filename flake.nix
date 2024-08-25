@@ -7,36 +7,35 @@
 
   outputs = { self, nixpkgs, ... }: let 
     supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
-    forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
-    nixpkgsFor = forAllSystems (system:
-      import nixpkgs {
-        inherit system;
+    forAllSystems = function:
+      nixpkgs.lib.genAttrs supportedSystems
+        (system: let
+          nixpkgs-settings = {
+            inherit system;
 
-        overlays = [
-          (import ./nix/overlays.nix self)
-        ];
-      });
+          overlays = [
+            (import ./nix/overlays.nix self)
+          ];
+        };
+
+        in function (import nixpkgs nixpkgs-settings));
 
   in {
     overlays.default = import ./nix/overlays.nix self;
 
-    packages = forAllSystems (system: let
-      pkgs = nixpkgsFor.${system};
+    packages = forAllSystems (pkgs: let
+      qtile' = pkgs.python3Packages.qtile;
     in {
-      default = self.packages.${system}.qtile;
+      default = self.packages.${pkgs.system}.qtile;
 
-      qtile = pkgs.python3.pkgs.qtile.overrideAttrs (_: {
-        inherit (pkgs.python3.pkgs.qtile) pname version meta;
-
-        name = with pkgs.python3.pkgs.qtile; "${pname}-${version}";
-        passthru.unwrapped = pkgs.python3.pkgs.qtile;
+      qtile = qtile'.overrideAttrs (_: {
+        name = "${qtile'.pname}-${qtile'.version}";
+        passthru.unwrapped = qtile';
       });
     });
 
-    devShells = forAllSystems (system: let
-      pkgs = nixpkgsFor.${system};
-
+    devShells = forAllSystems (pkgs: let
       common-python-deps = ps: with ps; [
         # deps for running, same as NixOS package
         (cairocffi.override {withXcffib = true;})
