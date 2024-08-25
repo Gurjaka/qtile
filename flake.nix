@@ -5,7 +5,7 @@
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
   };
 
-  outputs = { self, nixpkgs, ... }: let 
+  outputs = { self, nixpkgs }: let
     supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
 
     forAllSystems = function:
@@ -22,6 +22,8 @@
         in function (import nixpkgs nixpkgs-settings));
 
   in {
+    checks = forAllSystems (pkgs: pkgs.python3Packages.qtile.passthru.tests);
+
     overlays.default = import ./nix/overlays.nix self;
 
     packages = forAllSystems (pkgs: let
@@ -29,39 +31,20 @@
     in {
       default = self.packages.${pkgs.system}.qtile;
 
-      qtile = qtile'.overrideAttrs (_: {
+      qtile = qtile'.overrideAttrs (prev: {
         name = "${qtile'.pname}-${qtile'.version}";
         passthru.unwrapped = qtile';
       });
     });
 
     devShells = forAllSystems (pkgs: let
-      common-python-deps = ps: with ps; [
-        # deps for running, same as NixOS package
-        (cairocffi.override {withXcffib = true;})
-        dbus-next
-        iwlib
-        mpd2
-        psutil
-        pulsectl-asyncio
-        pygobject3
-        python-dateutil
-        pywayland
-        pywlroots
-        pyxdg
-        xcffib
-        xkbcommon
-
-        # building ffi
-        setuptools
-
-        # migrate
-        libcst
-
-        # tests
-        coverage
-        pytest
-      ];
+      common-python-deps = ps: with ps;
+        [ python-dateutil ]
+        ++ [
+          # tests
+          coverage
+          pytest
+        ];
 
       tests = {
         wayland = pkgs.writeScriptBin "qtile-run-tests-wayland" ''
@@ -80,17 +63,10 @@
         wrapGAppsHook
         gobject-introspection
 
-        ## system deps
-        libinput
-        libxkbcommon
-        xorg.xcbutilwm
-
         # x11 deps
         xorg.xorgserver
         xorg.libX11
 
-        # wayland deps
-        wayland
         wlroots_0_17
         # test/backend/wayland/test_window.py
         gtk-layer-shell
@@ -109,6 +85,8 @@
         shellHook = ''
           export PYTHONPATH=$(readlink -f .):$PYTHONPATH
         '';
+
+        inputsFrom = [ self.packages.${pkgs.system}.qtile ];
 
         packages = with pkgs; [
           (python3.withPackages common-python-deps)
