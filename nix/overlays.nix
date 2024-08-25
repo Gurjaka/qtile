@@ -3,17 +3,6 @@ self: final: prev: {
     (prev.pythonPackagesOverlays or [])
     ++ [
       (_: pprev: {
-        pywlroots = (pprev.pywlroots.overrideAttrs(_: {
-          version = "0.17.0";
-          src = prev.fetchFromGitHub {
-            owner = "flacjacket";
-            repo = "pywlroots";
-            rev = "bf314bae5d7a9552225c44ab1e7bf7e4fafa869e";
-            hash = "sha256-tvem8gmih9EfseZ3MgU1UW05xfttzKLcJEaymM5uNPI=";
-          };
-        })).override {
-          wlroots = prev.wlroots_0_17;
-        };
         qtile = (pprev.qtile.overrideAttrs (old: let
           flakever = self.shortRev or "dev";
         in {
