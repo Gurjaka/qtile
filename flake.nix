@@ -10,16 +10,15 @@
 
     forAllSystems = function:
       nixpkgs.lib.genAttrs supportedSystems
-        (system: let
-          nixpkgs-settings = {
-            inherit system;
+      (system: let
+        nixpkgs-settings = {
+          inherit system;
 
           overlays = [
             (import ./nix/overlays.nix self)
           ];
         };
-
-        in function (import nixpkgs nixpkgs-settings));
+      in function (import nixpkgs nixpkgs-settings));
 
   in {
     checks = forAllSystems (pkgs: pkgs.python3Packages.qtile.passthru.tests);
@@ -73,14 +72,14 @@
       ] ++ (builtins.attrValues tests);
     in {
       default = pkgs.mkShell {
-        env = {
-          QTILE_DLOPEN_LIBGOBJECT = "${pkgs.glib}/lib/libgobject-2.0.so.0";
-          QTILE_DLOPEN_LIBPANGOCAIRO = "${pkgs.pango}/lib/libpangocairo-1.0.so.0";
-          QTILE_DLOPEN_LIBPANGO = "${pkgs.pango}/lib/libpango-1.0.so.0";
-          QTILE_DLOPEN_LIBXCBUTILCURSORS = "${pkgs.xcb-util-cursor}/lib/libxcb-cursor.so.0";
-          QTILE_INCLUDE_LIBPIXMAN = "${pkgs.pixman}/include";
-          QTILE_INCLUDE_LIBDRM = "${pkgs.libdrm.dev}/include/libdrm";
-        };
+        env.LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+          pkgs.glib
+          pkgs.pango
+          pkgs.pango
+          pkgs.xcb-util-cursor
+          pkgs.pixman
+          pkgs.libdrm.dev
+        ];
 
         shellHook = ''
           export PYTHONPATH=$(readlink -f .):$PYTHONPATH
