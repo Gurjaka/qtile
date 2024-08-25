@@ -72,14 +72,19 @@
       ] ++ (builtins.attrValues tests);
     in {
       default = pkgs.mkShell {
-        env.LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
-          pkgs.glib
-          pkgs.pango
-          pkgs.pango
-          pkgs.xcb-util-cursor
-          pkgs.pixman
-          pkgs.libdrm.dev
-        ];
+        env = {
+          PIXMAN_PATH = "${pkgs.pixman}/include/pixman-1";
+          LIBDRM_PATH = "${pkgs.libdrm.dev}/include/libdrm";
+
+          LD_LIBRARY_PATH = with pkgs; lib.makeLibraryPath [
+            glib
+            pango
+            pango
+            xcb-util-cursor
+            pixman
+            libdrm.dev
+          ];
+        };
 
         shellHook = ''
           export PYTHONPATH=$(readlink -f .):$PYTHONPATH

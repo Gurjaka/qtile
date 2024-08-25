@@ -1,3 +1,5 @@
+import os
+
 import wlroots.ffi_build as wlr
 from cffi import FFI
 
@@ -18,8 +20,8 @@ ffi.set_source(
     libraries=["wlroots", "input"],
     define_macros=[("WLR_USE_UNSTABLE", None)],
     include_dirs=[
-        "/usr/include/pixman-1",
-        "/usr/include/libdrm",
+        os.getenv("PIXMAN_PATH") or "/usr/include/pixman-1",
+        os.getenv("LIBDRM_PATH") or "/usr/include/libdrm",
         wlr.include_dir,
     ],
 )
