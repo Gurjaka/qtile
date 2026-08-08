@@ -981,21 +981,18 @@ class Core(base.Core):
         old_index = self.qtile.groups.index(old_group)
         new_index = self.qtile.groups.index(new_group)
         direction = 1 if new_index > old_index else -1
-        offset = screen.width * direction
-
+        offset = screen.height * direction
         duration, ease = resolve_animation(self.qtile, "slide", None, None)
-
         if duration == 0:
             super().animate_group_switch(screen, old_group, new_group, warp)
             return
-
         with self.qtile.core.masked():
             sliding_out = list(old_group.windows)
             for win in sliding_out:
-                orig_x = win.x
+                orig_y = win.y
                 win.place(
-                    win.x - offset,
-                    win.y,
+                    win.x,
+                    win.y - offset,
                     win.width,
                     win.height,
                     win.borderwidth,
@@ -1003,10 +1000,8 @@ class Core(base.Core):
                     duration=duration,
                     ease=ease,
                 )
-                win.x = orig_x
-
+                win.y = orig_y
             old_group.screen = None
-
             remaining = len(sliding_out)
 
             def _on_slide_out_done():
@@ -1020,13 +1015,12 @@ class Core(base.Core):
                     self.register_anim_complete(win.wid, _on_slide_out_done)
             else:
                 old_group.hide()
-
             new_group.set_screen(screen, warp)
             for win in new_group.windows:
-                target_x = win.x
+                target_y = win.y
                 win.place(
-                    target_x + offset,
-                    win.y,
+                    win.x,
+                    target_y + offset,
                     win.width,
                     win.height,
                     win.borderwidth,
@@ -1034,8 +1028,8 @@ class Core(base.Core):
                     duration=0,
                 )
                 win.place(
-                    target_x,
-                    win.y,
+                    win.x,
+                    target_y,
                     win.width,
                     win.height,
                     win.borderwidth,

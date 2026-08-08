@@ -714,9 +714,7 @@ class Window(Base, base.Window):
             old_group = self.group
         else:
             return
-
         duration, ease = resolve_animation(self.qtile, "slide", duration, ease)
-
         try:
             old_index = self.qtile.groups.index(old_group)
             new_index = self.qtile.groups.index(group)
@@ -728,16 +726,14 @@ class Window(Base, base.Window):
             if switch_group:
                 group.toscreen(toggle=toggle)
             return
-
         direction = -1 if new_index > old_index else 1
         screen = old_group.screen or self.qtile.current_screen
-        offset = (screen.dwidth - self.x) if direction == 1 else -(self.x + self.width)
-        orig_x = self.x
-
+        offset = (screen.dheight - self.y) if direction == 1 else -(self.y + self.height)
+        orig_y = self.y
         with self.qtile.core.masked():
             self.place(
-                x=self.x - offset,
-                y=self.y,
+                x=self.x,
+                y=self.y - offset,
                 width=self.width,
                 height=self.height,
                 borderwidth=self.borderwidth,
@@ -745,7 +741,6 @@ class Window(Base, base.Window):
                 duration=duration,
                 ease=ease,
             )
-
             if self in old_group.windows:
                 old_group.windows.remove(self)
             old_group._remove_from_focus_history(self)
@@ -761,7 +756,7 @@ class Window(Base, base.Window):
         def complete_migration():
             if self.defunct:
                 return
-            self.x = orig_x
+            self.y = orig_y
             if (
                 not self.qtile.dgroups.groups_map[old_group.name].persist
                 and len(old_group.windows) <= 0
@@ -770,8 +765,8 @@ class Window(Base, base.Window):
                 self.qtile.dgroups._del(self)
                 self.group = None
             self.hide()
-            if group.screen and self.x < group.screen.x:
-                self.x += group.screen.x
+            if group.screen and self.y < group.screen.y:
+                self.y += group.screen.y
             group.add(self)
             if switch_group:
                 group.toscreen(toggle=toggle)
