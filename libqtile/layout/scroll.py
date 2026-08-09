@@ -78,12 +78,9 @@ class Scroll(base.Layout):
         self.offset_x: int = 0
         self._last_geometry: dict[Window, tuple] = {}
         self._last_fullscreen: dict[Window, bool] = {}
-        self._last_hidden: dict[Window, bool] = {}
 
     def clone(self, group):
-        """
-        Create a new instance for each workspace/group.
-        """
+        """Create a new instance for each workspace/group."""
         c = base.Layout.clone(self, group)
         assert isinstance(c, Scroll)
         c.clients = []
@@ -96,7 +93,6 @@ class Scroll(base.Layout):
         c.offset_x = 0
         c._last_geometry = {}
         c._last_fullscreen = {}
-        c._last_hidden = {}
         return c
 
     def _get_window_position(self, client: Window) -> tuple[int, int] | None:
@@ -156,15 +152,9 @@ class Scroll(base.Layout):
 
     def _set_visible(self, win: Window, visible: bool) -> None:
         """
-        Call hide()/unhide() only on an actual visibility transition.
-        Calling these unconditionally on every configure() pass (as we used
-        to) resets state on windows whose visibility never changed, which
-        was cancelling their in-flight animations.
+        Show or hide a window.
         """
-        was_hidden = self._last_hidden.get(win)
-        if was_hidden is None or was_hidden == visible:
-            win.unhide() if visible else win.hide()
-        self._last_hidden[win] = not visible
+        win.unhide() if visible else win.hide()
 
     def focus(self, client: Window) -> None:
         self.focused = client
@@ -303,7 +293,7 @@ class Scroll(base.Layout):
             cur_y += win_h
 
             if win_y + win_h < screen_rect.y or win_y > screen_rect.y + screen_rect.height:
-                win.hide()
+                self._set_visible(win, False)
                 continue
 
             border_color = self.border_focus if win.has_focus else self.border_normal
@@ -315,7 +305,7 @@ class Scroll(base.Layout):
                 border_width,
                 border_color,
             )
-            win.unhide()
+            self._set_visible(win, True)
             if self._last_geometry.get(win) != geom:
                 win.place(*geom, margin=self.margin)
                 self._last_geometry[win] = geom
