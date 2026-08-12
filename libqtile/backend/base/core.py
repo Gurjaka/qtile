@@ -10,7 +10,7 @@ from libqtile import config, hook
 from libqtile.backend.base.idle_inhibit import IdleInhibitorManager
 from libqtile.backend.base.idle_notify import IdleNotifier
 from libqtile.command.base import CommandObject, ItemT, expose_command
-from libqtile.config import Screen
+from libqtile.config import Screen, ScreenRect
 from libqtile.group import _Group
 
 if typing.TYPE_CHECKING:
@@ -205,3 +205,11 @@ class Core(CommandObject, metaclass=ABCMeta):
             new_group.set_screen(screen, warp)
             if old_group is not new_group:
                 old_group.set_screen(None, warp)
+
+    def set_window_clipping(
+        self,
+        window: Window,
+        area: ScreenRect | tuple[int, int, int, int] | None,
+        border_width: int,
+    ) -> None:
+        pass
