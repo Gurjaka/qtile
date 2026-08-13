@@ -210,7 +210,8 @@ void qw_view_paint_borders(struct qw_view *view, const struct qw_border *borders
     int outer_w = view->width + total_width * 2;
     int outer_h = view->height + total_width * 2;
 
-    // wlr_log(WLR_INFO, "[Border Debug] View has_clip=%d | clip_box=(%d, %d, %d, %d) | view_size=(%dx%d) | outer_size=(%dx%d)",
+    // wlr_log(WLR_INFO, "[Border Debug] View has_clip=%d | clip_box=(%d, %d, %d, %d) |
+    // view_size=(%dx%d) | outer_size=(%dx%d)",
     //         view->has_clip,
     //         view->clip_box.x, view->clip_box.y, view->clip_box.width, view->clip_box.height,
     //         view->width, view->height, outer_w, outer_h);
@@ -226,18 +227,19 @@ void qw_view_paint_borders(struct qw_view *view, const struct qw_border *borders
         int bw = src->width;
 
         struct wlr_box base_sides[4] = {
-            { coord, coord, outer_w - coord * 2, bw },
-            { outer_w - bw - coord, coord, bw, outer_h - coord * 2 },
-            { coord, outer_h - bw - coord, outer_w - coord * 2, bw },
-            { coord, coord, bw, outer_h - coord * 2 },
+            {coord, coord, outer_w - coord * 2, bw},
+            {outer_w - bw - coord, coord, bw, outer_h - coord * 2},
+            {coord, outer_h - bw - coord, outer_w - coord * 2, bw},
+            {coord, coord, bw, outer_h - coord * 2},
         };
 
         for (int j = 0; j < 4; j++) {
             struct wlr_box final_side = base_sides[j];
 
-            if (view->has_clip && !wlr_box_intersection(&final_side, &base_sides[j], &view->clip_box)) {
-                    continue;
-                }
+            if (view->has_clip &&
+                !wlr_box_intersection(&final_side, &base_sides[j], &view->clip_box)) {
+                continue;
+            }
 
             if (src->type == QW_BORDER_RECT) {
                 for (int c = 0; c < 4; c++) {
@@ -258,13 +260,15 @@ void qw_view_paint_borders(struct qw_view *view, const struct qw_border *borders
 
                 int abs_x = 0, abs_y = 0;
                 wlr_scene_node_coords(&rect->node, &abs_x, &abs_y);
-                // wlr_log(WLR_INFO, "[Border Debug] Layer %d Side %d (RECT) | Local Position=(%d, %d) | Abs Scene Coords=(%d, %d) | Rendered Size=(%dx%d)",
-                //         i, j, rect->node.x, rect->node.y, abs_x, abs_y, final_side.width, final_side.height);
+                // wlr_log(WLR_INFO, "[Border Debug] Layer %d Side %d (RECT) | Local Position=(%d,
+                // %d) | Abs Scene Coords=(%d, %d) | Rendered Size=(%dx%d)",
+                //         i, j, rect->node.x, rect->node.y, abs_x, abs_y, final_side.width,
+                //         final_side.height);
 
             } else if (src->type == QW_BORDER_BUFFER) {
                 cairo_surface_t *surface = src->buffer.surface;
-                struct wlr_scene_buffer **buffers = create_scene_buffers_from_surface(
-                    view->content_tree, surface, &final_side, 1);
+                struct wlr_scene_buffer **buffers =
+                    create_scene_buffers_from_surface(view->content_tree, surface, &final_side, 1);
 
                 if (buffers && buffers[0]) {
                     wlr_scene_node_set_position(&buffers[0]->node, final_side.x, final_side.y);
@@ -272,8 +276,11 @@ void qw_view_paint_borders(struct qw_view *view, const struct qw_border *borders
 
                     int abs_x = 0, abs_y = 0;
                     wlr_scene_node_coords(&buffers[0]->node, &abs_x, &abs_y);
-                    wlr_log(WLR_INFO, "[Border Debug] Layer %d Side %d (BUFFER) | Local Position=(%d, %d) | Abs Scene Coords=(%d, %d) | Rendered Size=(%dx%d)",
-                            i, j, buffers[0]->node.x, buffers[0]->node.y, abs_x, abs_y, final_side.width, final_side.height);
+                    wlr_log(WLR_INFO,
+                            "[Border Debug] Layer %d Side %d (BUFFER) | Local Position=(%d, %d) | "
+                            "Abs Scene Coords=(%d, %d) | Rendered Size=(%dx%d)",
+                            i, j, buffers[0]->node.x, buffers[0]->node.y, abs_x, abs_y,
+                            final_side.width, final_side.height);
 
                     free(buffers);
                 }
@@ -537,11 +544,11 @@ void qw_view_update_ftl_outputs(struct qw_view *view, struct wlr_surface *surfac
 
         wl_list_remove(&vo->link);
         free(vo);
-    
     }
 }
 
-void qw_view_set_clip_area(struct qw_view *view, int x, int y, int width, int height, int border_width) {
+void qw_view_set_clip_area(struct qw_view *view, int x, int y, int width, int height,
+                           int border_width) {
     if (!view) {
         return;
     }

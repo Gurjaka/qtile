@@ -166,7 +166,8 @@ void qw_view_ftl_manager_handle_create(struct qw_view *view);
 void qw_view_ftl_manager_handle_destroy(struct qw_view *view);
 
 // Window clipping functions
-void qw_view_set_clip_area(struct qw_view *view, int x, int y, int width, int height, int border_width);
+void qw_view_set_clip_area(struct qw_view *view, int x, int y, int width, int height,
+                           int border_width);
 void qw_view_clear_clip_area(struct qw_view *view);
 
 struct qw_output *qw_view_get_primary_output(struct qw_view *view);
