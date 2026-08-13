@@ -325,6 +325,10 @@ class Scroll(base.Layout):
                 else self.focused_column + 1
             )
             self.clients.insert(insert_at, [client])
+            self.client_column_widths = self._reindex_after_insertion(
+                self.client_column_widths, insert_at
+            )
+            self.column_offset_y = self._reindex_after_insertion(self.column_offset_y, insert_at)
             self.focused_column = insert_at
             self.focused_window = 0
 
@@ -360,6 +364,13 @@ class Scroll(base.Layout):
         self.focused_window = min(self.focused_window, len(self.clients[self.focused_column]) - 1)
         self.focused = self.clients[self.focused_column][self.focused_window]
         return self.focused
+
+    @staticmethod
+    def _reindex_after_insertion(mapping: dict[int, int], inserted_idx: int) -> dict[int, int]:
+        """
+        Shift dict keys up by one for every index at or past an inserted column.
+        """
+        return {(i + 1 if i >= inserted_idx else i): v for i, v in mapping.items()}
 
     @staticmethod
     def _reindex_after_removal(mapping: dict[int, int], removed_idx: int) -> dict[int, int]:
@@ -502,6 +513,10 @@ class Scroll(base.Layout):
         self.clients[col_idx - 1].append(win)
         if not self.clients[col_idx]:
             self.clients.pop(col_idx)
+            self.client_column_widths = self._reindex_after_removal(
+                self.client_column_widths, col_idx
+            )
+            self.column_offset_y = self._reindex_after_removal(self.column_offset_y, col_idx)
         self.focused_column = col_idx - 1
         self.focused_window = len(self.clients[self.focused_column]) - 1
         self.group.layout_all()
@@ -528,6 +543,10 @@ class Scroll(base.Layout):
             self.focused_column = col_idx + 1
         else:
             self.clients.pop(col_idx)
+            self.client_column_widths = self._reindex_after_removal(
+                self.client_column_widths, col_idx
+            )
+            self.column_offset_y = self._reindex_after_removal(self.column_offset_y, col_idx)
             self.focused_column = col_idx
         self.focused_window = 0
         self.group.layout_all()
@@ -540,6 +559,10 @@ class Scroll(base.Layout):
         win = self.clients[col_idx].pop(win_idx)
         new_idx = col_idx if before else col_idx + 1
         self.clients.insert(new_idx, [win])
+        self.client_column_widths = self._reindex_after_insertion(
+            self.client_column_widths, new_idx
+        )
+        self.column_offset_y = self._reindex_after_insertion(self.column_offset_y, new_idx)
         self.focused_column = new_idx
         self.focused_window = 0
         self.group.layout_all()
